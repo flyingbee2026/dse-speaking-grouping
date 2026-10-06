@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>DSE Speaking Practice · Random Grouping 隨機分組</title>
+<title>DSE Speaking Practice · Random Grouping</title>
 <meta name="description" content="Random grouping tool for DSE Paper 4 speaking practice — shuffle class numbers into groups with Candidate A–D seating.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -61,7 +61,7 @@ body{
     #fffdfa;
   min-height:100vh;
 }
-.wrap{ max-width:1040px; margin:0 auto; }
+.wrap{ max-width:1200px; margin:0 auto; }
 
 /* ---------- header ---------- */
 .hero{ text-align:center; margin:6px 0 18px; }
@@ -178,9 +178,14 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
 /* ---------- groups ---------- */
 #output{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(292px,1fr));
-  gap:clamp(12px,3vw,18px);
+  grid-template-columns:1fr;
+  gap:clamp(12px,2vw,18px);
   align-items:start;
+}
+/* two group cards per row, but only when a card is wide enough to keep
+   A B C D on one line (below that, full-width single column) */
+@media (min-width:1160px){
+  #output{ grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
 .empty{
   grid-column:1 / -1;
@@ -208,11 +213,11 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
   border-radius:999px; padding:4px 10px; white-space:nowrap;
 }
 .gdot{ width:14px; height:14px; border-radius:50%; flex:0 0 14px; }
-.seats{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+.seats{ display:flex; flex-wrap:wrap; gap:8px; }
 .seat{
-  display:flex; align-items:center; gap:10px;
-  width:100%; min-height:60px;
-  padding:8px 10px;
+  display:flex; align-items:center; gap:8px;
+  flex:1 1 auto; min-height:56px;
+  padding:8px 12px;
   font:inherit; color:inherit; text-align:left;
   background:#fbfbfe;
   border:3px solid #eae7f6;
@@ -232,14 +237,15 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
   background:var(--purple);
   box-shadow:0 3px 0 rgba(0,0,0,.10);
 }
-.cand{ min-width:0; }
+.cand{ min-width:0; white-space:nowrap; }
 .c-label{
-  display:block; font-size:12px; font-weight:900; letter-spacing:.08em;
-  text-transform:uppercase; color:#5f7488; line-height:1.25;
+  font-size:clamp(11px,1.05vw,14px); font-weight:800;
+  color:#5f7488; line-height:1;
 }
 .c-no{
-  display:block; font-size:clamp(23px,6.6vw,28px); font-weight:900;
-  line-height:1.12; color:#22374a; font-variant-numeric:tabular-nums;
+  font-size:clamp(19px,1.7vw,23px); font-weight:900;
+  line-height:1; color:#22374a; font-variant-numeric:tabular-nums;
+  margin-left:.3em;
 }
 .seat.sel{
   background:#eafaf7;
@@ -294,12 +300,18 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
 }
 
 /* ---------- small screens ---------- */
+@media (max-width:619px){
+  .c-label{ display:none; }
+  .seat{ min-height:48px; padding:6px 8px; justify-content:center; gap:6px; }
+  .letter{ flex:0 0 30px; width:30px; height:30px; font-size:17px; }
+  .c-no{ font-size:19px; margin-left:0; }
+}
 @media (max-width:380px){
-  .seats{ grid-template-columns:1fr; }
   .gcount{ display:none; }
 }
 
 /* ---------- print ---------- */
+@page{ size:A4 landscape; margin:10mm; }
 @media print{
   .no-print,.jserr,.hero-emoji,.hint{ display:none !important; }
   body{ background:#fff; padding:0; color:#000; font-size:13px; }
@@ -309,41 +321,42 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
   .hero{ text-align:left; margin:0 0 12px; }
   #output{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   .gcard{ box-shadow:none !important; border-width:2px !important; }
-  .seat{ background:#fff; border-width:2px; min-height:44px; }
-  .c-no{ font-size:19px; }
-  .letter{ width:32px; height:32px; flex-basis:32px; font-size:17px; }
+  .seat{ background:#fff; border-width:2px; min-height:40px; padding:4px 6px; }
+  .c-label{ font-size:8.5px; }
+  .c-no{ font-size:16px; margin-left:.25em; }
+  .letter{ width:24px; height:24px; flex-basis:24px; font-size:15px; }
 }
 </style>
 </head>
 <body>
 <div id="js-error" class="jserr"></div>
 <noscript>
-  <div class="jserr" style="display:block">This page needs JavaScript. 這個網頁需要開啟 JavaScript。</div>
+  <div class="jserr" style="display:block">This page needs JavaScript.</div>
 </noscript>
 
 <div class="wrap">
   <header class="hero">
     <div class="hero-emoji" aria-hidden="true">&#127908;</div>
-    <h1>DSE Speaking Practice<br><span class="hl">隨機分組</span></h1>
-    <p class="sub">Paper 4 Group Discussion &mdash; Random Grouping</p>
+    <h1>DSE Speaking Practice<br><span class="hl">Random Grouping</span></h1>
+    <p class="sub">Paper 4 Group Discussion &mdash; Class-Number Shuffler</p>
     <div class="divider" aria-hidden="true"></div>
   </header>
 
   <section class="panel no-print">
     <div class="field">
-      <span class="flabel" id="lb-range">Class number 班號</span>
+      <span class="flabel" id="lb-range">Class number</span>
       <div class="inrow">
         <input id="fromNo" type="number" inputmode="numeric" min="1" max="99" step="1" value="1" aria-labelledby="lb-range" aria-label="Class number from">
-        <span class="to">to 至</span>
+        <span class="to">to</span>
         <input id="toNo" type="number" inputmode="numeric" min="1" max="99" step="1" value="15" aria-labelledby="lb-range" aria-label="Class number to">
       </div>
     </div>
     <div class="field">
-      <span class="flabel" id="lb-groups">Number of groups 組數</span>
+      <span class="flabel" id="lb-groups">Number of groups</span>
       <input id="numGroups" type="number" inputmode="numeric" min="1" max="40" step="1" value="4" aria-labelledby="lb-groups" aria-label="Number of groups">
     </div>
     <div class="stat" id="stat">&mdash;</div>
-    <button id="btnGo" class="btn primary" type="button">&#127922; Shuffle 抽籤分組</button>
+    <button id="btnGo" class="btn primary" type="button">&#127922; Shuffle</button>
   </section>
 
   <div id="msg" class="msg" aria-live="polite"></div>
@@ -351,13 +364,13 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
   <section id="output" aria-live="polite"></section>
 
   <div class="actions no-print" id="actions" style="display:none">
-    <button id="btnAgain" class="btn" type="button">&#128256; Shuffle again 重新分組</button>
-    <button id="btnCopy" class="btn" type="button">&#128203; Copy 複製名單</button>
-    <button id="btnPrint" class="btn" type="button">&#128424; Print 列印</button>
+    <button id="btnAgain" class="btn" type="button">&#128256; Shuffle again</button>
+    <button id="btnCopy" class="btn" type="button">&#128203; Copy list</button>
+    <button id="btnPrint" class="btn" type="button">&#128424; Print</button>
   </div>
 
-  <p class="hint no-print" id="hint" style="display:none">Tap two candidates to swap them 點選兩位考生即可對調</p>
-  <p class="foot no-print">Each group holds up to 4 candidates, labelled A&ndash;D, like the real DSE Paper 4 group discussion.<br>每組最多 4 位考生，以 A&ndash;D 標示座位次序。</p>
+  <p class="hint no-print" id="hint" style="display:none">Tap two candidates to swap them</p>
+  <p class="foot no-print">Each group holds up to 4 candidates, labelled A&ndash;D, like the real DSE Paper 4 group discussion.</p>
 </div>
 
 <script>
@@ -365,7 +378,7 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
   'use strict';
 
   var LETTERS = ['A','B','C','D','E','F','G','H'];
-  var DEFAULT_HINT = 'Tap two candidates to swap them 點選兩位考生即可對調';
+  var DEFAULT_HINT = 'Tap two candidates to swap them';
   var state = { data: [], sel: null };
 
   var grid = document.getElementById('output');
@@ -416,16 +429,11 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
     }
     return out;
   }
-  function sizesText(){
-    var parts = [];
-    for(var i = 0; i < state.data.length; i++){ parts.push(state.data[i].length); }
-    return parts.join(' · ');
-  }
 
   /* ---------- rendering ---------- */
   function render(){
     if(!state.data.length){
-      grid.innerHTML = '<p class="empty">No groups yet 還沒有分組<br>Press &#127922; Shuffle 抽籤分組 開始</p>';
+      grid.innerHTML = '<p class="empty">No groups yet<br>Press &#127922; Shuffle to start</p>';
       return;
     }
     var html = '';
@@ -440,7 +448,7 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
         html += '<button type="button" class="seat" data-seat="1" data-g="' + g + '" data-i="' + i + '"';
         html += ' aria-label="Group ' + (g + 1) + ' Candidate ' + LETTERS[i] + ', class number ' + mem[i] + '">';
         html += '<span class="letter" aria-hidden="true">' + LETTERS[i] + '</span>';
-        html += '<span class="cand"><span class="c-label">Candidate</span>';
+        html += '<span class="cand"><span class="c-label">Candidate</span> ';
         html += '<span class="c-no">' + mem[i] + '</span></span>';
         html += '</button>';
       }
@@ -475,13 +483,13 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
     }
     var n = to - from + 1;
     if(g > n){
-      el.innerHTML = 'Too many groups 組數太多';
+      el.innerHTML = 'Too many groups';
       return;
     }
     var base = Math.floor(n / g), rem = n % g, parts = [];
     for(var i = 0; i < g; i++){ parts.push(base + (i < rem ? 1 : 0)); }
-    el.innerHTML = n + ' students 位考生 &middot; ' + g + ' groups 組<br>' +
-                   '<span class="gsizes">每組人數 Group sizes: ' + parts.join(' &middot; ') + '</span>';
+    el.innerHTML = n + ' students &middot; ' + g + ' groups<br>' +
+                   '<span class="gsizes">Group sizes: ' + parts.join(' &middot; ') + '</span>';
   }
 
   /* ---------- generate ---------- */
@@ -491,25 +499,25 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
     var g = parseIntOrNaN($('numGroups').value);
 
     if(isNaN(from) || isNaN(to)){
-      showMsg('Please enter the class-number range, e.g. 1 to 15.<br>請輸入班號範圍，例如 1 至 15。', 'err');
+      showMsg('Please enter the class-number range, e.g. 1 to 15.', 'err');
       return;
     }
     if(isNaN(g)){
-      showMsg('Please enter the number of groups.<br>請輸入組數。', 'err');
+      showMsg('Please enter the number of groups.', 'err');
       return;
     }
     if(from < 1 || to > 99 || from > to){
-      showMsg('Invalid class-number range 班號範圍不正確 (1&ndash;99，起點不可大於終點)。', 'err');
+      showMsg('Invalid class-number range (1&ndash;99, start must not be larger than end).', 'err');
       return;
     }
     if(g < 1 || g > 40){
-      showMsg('Number of groups must be 1&ndash;40 組數必須為 1&ndash;40。', 'err');
+      showMsg('Number of groups must be 1&ndash;40.', 'err');
       return;
     }
     var nums = [];
     for(var i = from; i <= to; i++){ nums.push(i); }
     if(g > nums.length){
-      showMsg('Number of groups (' + g + ') cannot be larger than the class size (' + nums.length + ').<br>組數不可多於考生人數 (' + nums.length + ')。', 'err');
+      showMsg('Number of groups (' + g + ') cannot be larger than the class size (' + nums.length + ').', 'err');
       return;
     }
 
@@ -522,9 +530,9 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
 
     var maxSize = Math.ceil(nums.length / g);
     if(maxSize > 4){
-      showMsg('每組約 ' + maxSize + ' 人 &mdash; DSE 小組討論通常 3&ndash;4 人，可考慮分成 ' + Math.ceil(nums.length / 4) + ' 組。<br>About ' + maxSize + ' per group; DSE groups are usually 3&ndash;4, so ' + Math.ceil(nums.length / 4) + ' groups may fit better.', 'warn');
+      showMsg('About ' + maxSize + ' per group &mdash; DSE groups are usually 3&ndash;4 candidates, so ' + Math.ceil(nums.length / 4) + ' groups may fit better.', 'warn');
     } else {
-      showMsg('&#9989; 分組完成 &middot; ' + g + ' groups &middot; ' + nums.length + ' candidates', 'ok');
+      showMsg('&#9989; Groups ready &middot; ' + g + ' groups &middot; ' + nums.length + ' candidates', 'ok');
     }
     save();
   }
@@ -563,7 +571,7 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
     if(state.sel === null){
       state.sel = { g: g, i: i };
       addClass(el, 'sel');
-      setHint('已選 Candidate ' + LETTERS[i] + '（' + state.data[g][i] + '）&mdash; 再點另一位考生即可對調<br>Selected &mdash; now tap the candidate you want to swap with');
+      setHint('Selected Candidate ' + LETTERS[i] + ' (' + state.data[g][i] + ') &mdash; now tap the candidate to swap with');
       return;
     }
     if(state.sel.g === g && state.sel.i === i){
@@ -580,18 +588,18 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
     render();
     flashSeat(a);
     flashSeat(b);
-    setHint('Swapped 已對調 &#9989; &mdash; ' + DEFAULT_HINT);
+    setHint('Swapped &#9989; &mdash; ' + DEFAULT_HINT);
   }
 
   /* ---------- copy / print ---------- */
   function buildText(){
-    var lines = ['DSE Speaking Practice — 分組名單 Random Grouping', ''];
+    var lines = ['DSE Speaking Practice — Grouping list', ''];
     for(var g = 0; g < state.data.length; g++){
       var mem = state.data[g], parts = [];
       for(var i = 0; i < mem.length; i++){ parts.push(LETTERS[i] + ': ' + mem[i]); }
       lines.push('Group ' + (g + 1) + ' — ' + parts.join('   '));
     }
-    lines.push('', 'A–D = seating order in the group 座位次序');
+    lines.push('', 'A–D = seating order in the group');
     return lines.join('\n');
   }
   function showCopyBox(text){
@@ -601,7 +609,7 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
     wrap.id = 'copybox';
     wrap.className = 'copybox no-print';
     wrap.innerHTML = '<textarea readonly rows="8" aria-label="Grouping list"></textarea>' +
-                     '<p class="tip">長按文字全選複製 &middot; long-press the text to select and copy</p>';
+                     '<p class="tip">Long-press the text to select and copy</p>';
     $('actions').parentNode.insertBefore(wrap, $('actions'));
     var ta = wrap.getElementsByTagName('textarea')[0];
     ta.value = text;
@@ -610,7 +618,7 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
   function copyAll(){
     if(!state.data.length){ return; }
     var text = buildText();
-    var done = function(){ showMsg('已複製分組名單 Copied &#9989;', 'ok'); };
+    var done = function(){ showMsg('Copied &#9989;', 'ok'); };
     var fail = function(){ showCopyBox(text); };
     if(navigator.clipboard && navigator.clipboard.writeText){
       try{
