@@ -83,6 +83,7 @@ h1 .hl{
   background:linear-gradient(180deg, rgba(255,201,77,0) 62%, #ffe3a3 62%);
   padding:0 3px;
   border-radius:6px;
+  white-space:nowrap;
 }
 .sub{ margin:0; color:var(--ink-soft); font-weight:700; font-size:clamp(14px,3.8vw,17px); }
 .divider{
@@ -130,10 +131,11 @@ input[type="number"]{
 input[type="number"]:focus{ outline:none; border-color:var(--purple); background:#fff; box-shadow:0 0 0 4px rgba(139,124,246,.16); }
 #numGroups{ max-width:190px; }
 .stat{
-  font-size:clamp(13px,3.5vw,15px); font-weight:800; color:var(--ink-soft);
-  background:#f6f4ff; border-radius:14px; padding:9px 12px; margin:4px 0 14px;
-  text-align:center;
+  font-size:clamp(13px,3.5vw,15px); font-weight:800; color:#55697b;
+  background:#f2f0fd; border-radius:14px; padding:9px 12px; margin:4px 0 14px;
+  text-align:center; line-height:1.5;
 }
+.stat .gsizes{ color:#3f5b6e; }
 .stat .muted{ color:#b3bcc8; }
 
 /* ---------- buttons ---------- */
@@ -202,7 +204,7 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
 }
 .gcount{
   margin-left:auto; font-size:12px; font-weight:900; letter-spacing:.06em;
-  text-transform:uppercase; color:#8b9dae; background:#f5f7fa;
+  text-transform:uppercase; color:#64798c; background:#eef2f7;
   border-radius:999px; padding:4px 10px; white-space:nowrap;
 }
 .gdot{ width:14px; height:14px; border-radius:50%; flex:0 0 14px; }
@@ -478,7 +480,8 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
     }
     var base = Math.floor(n / g), rem = n % g, parts = [];
     for(var i = 0; i < g; i++){ parts.push(base + (i < rem ? 1 : 0)); }
-    el.innerHTML = n + ' students 位考生 &middot; ' + g + ' groups 組 &rarr; ' + parts.join(', ') + ' per group 每組';
+    el.innerHTML = n + ' students 位考生 &middot; ' + g + ' groups 組<br>' +
+                   '<span class="gsizes">每組人數 Group sizes: ' + parts.join(' &middot; ') + '</span>';
   }
 
   /* ---------- generate ---------- */
@@ -521,7 +524,7 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
     if(maxSize > 4){
       showMsg('每組約 ' + maxSize + ' 人 &mdash; DSE 小組討論通常 3&ndash;4 人，可考慮分成 ' + Math.ceil(nums.length / 4) + ' 組。<br>About ' + maxSize + ' per group; DSE groups are usually 3&ndash;4, so ' + Math.ceil(nums.length / 4) + ' groups may fit better.', 'warn');
     } else {
-      showMsg('Shuffled! ' + nums.length + ' 位考生分成 ' + g + ' 組（' + sizesText() + '）。<br>' + nums.length + ' candidates &rarr; ' + g + ' groups (' + sizesText() + ' per group).', 'ok');
+      showMsg('&#9989; 分組完成 &middot; ' + g + ' groups &middot; ' + nums.length + ' candidates', 'ok');
     }
     save();
   }
