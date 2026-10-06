@@ -61,7 +61,7 @@ body{
     #fffdfa;
   min-height:100vh;
 }
-.wrap{ max-width:1320px; margin:0 auto; }
+.wrap{ max-width:1440px; margin:0 auto; }
 
 /* ---------- header ---------- */
 .hero{ text-align:center; margin:6px 0 18px; }
@@ -184,7 +184,7 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
 }
 /* two group cards per row, but only when a card is wide enough to keep
    A B C D on one line (below that, full-width single column) */
-@media (min-width:1300px){
+@media (min-width:1360px){
   #output{ grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
 .empty{
@@ -299,14 +299,17 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
 }
 
 /* ---------- small screens ---------- */
-@media (max-width:639px){
+@media (max-width:719px){
   .c-label{ display:none; }
-  .seat{ min-height:48px; padding:6px 8px; justify-content:center; gap:6px; }
-  .letter{ flex:0 0 30px; width:30px; height:30px; font-size:17px; }
-  .c-no{ font-size:19px; margin-left:0; }
+  .seat{ flex:1 1 0; min-width:0; min-height:46px; padding:6px 5px; justify-content:center; gap:4px; }
+  .letter{ flex:0 0 28px; width:28px; height:28px; font-size:16px; }
+  .c-no{ font-size:18px; margin-left:0; }
 }
 @media (max-width:380px){
   .gcount{ display:none; }
+  .seat{ padding:4px 3px; }
+  .letter{ flex:0 0 26px; width:26px; height:26px; font-size:15px; }
+  .c-no{ font-size:17px; }
 }
 
 /* ---------- print ---------- */
