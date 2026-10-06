@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DSE Speaking Practice · Random Grouping 隨機分組</title>
+<meta name="description" content="Random grouping tool for DSE Paper 4 speaking practice — shuffle class numbers into groups with Candidate A–D seating.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<script>
+/* ES3-only diagnostic: runs even if the main script fails to parse */
+(function(){
+  window.onerror = function(m){
+    try{
+      var b = document.getElementById('js-error');
+      if(b){ b.style.display = 'block'; b.innerHTML = '&#9888; Page error: ' + m; }
+    }catch(e){}
+    return false;
+  };
+  setTimeout(function(){
+    try{
+      if(!window.__pageReady){
+        var b = document.getElementById('js-error');
+        if(b){
+          b.style.display = 'block';
+          b.innerHTML = '&#9888; The page script did not start. Please refresh. If it still fails, screenshot this message.';
+        }
+      }
+    }catch(e){}
+  }, 2500);
+})();
+</script>
+<style>
+:root{
+  --ink:#20323f;
+  --ink-soft:#63798c;
+  --coral:#ff7d90;
+  --teal:#2ec4b6;
+  --purple:#8b7cf6;
+  --sun:#ffc94d;
+  --line:#eceaf7;
+  --radius:22px;
+}
+*{ box-sizing:border-box; }
+html{ -webkit-text-size-adjust:100%; }
+body{
+  margin:0;
+  padding:clamp(14px,4vw,28px) clamp(12px,4vw,28px) 48px;
+  font-family:'Nunito','Baloo 2',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang HK','Hiragino Sans','Microsoft JhengHei',sans-serif;
+  font-size:clamp(16px,4.3vw,18px);
+  line-height:1.55;
+  color:var(--ink);
+  overflow-wrap:anywhere;
+  -webkit-print-color-adjust:exact;
+  print-color-adjust:exact;
+  background:
+    radial-gradient(circle at 10% 6%, #ffe9f0 0, rgba(255,233,240,0) 42%),
+    radial-gradient(circle at 90% 3%, #e4f2ff 0, rgba(228,242,255,0) 40%),
+    radial-gradient(circle at 50% 102%, #e8faf3 0, rgba(232,250,243,0) 46%),
+    #fffdfa;
+  min-height:100vh;
+}
+.wrap{ max-width:1040px; margin:0 auto; }
+
+/* ---------- header ---------- */
+.hero{ text-align:center; margin:6px 0 18px; }
+.hero-emoji{
+  font-size:clamp(34px,10vw,46px); line-height:1;
+  display:inline-block;
+  animation:bob 3s ease-in-out infinite;
+}
+@keyframes bob{ 0%,100%{ transform:translateY(0) rotate(-4deg); } 50%{ transform:translateY(-5px) rotate(4deg); } }
+h1{
+  font-family:'Baloo 2','Nunito',sans-serif;
+  font-weight:800;
+  font-size:clamp(24px,7.4vw,40px);
+  margin:6px 0 2px;
+  letter-spacing:.01em;
+  color:#2b3f52;
+}
+h1 .hl{
+  background:linear-gradient(180deg, rgba(255,201,77,0) 62%, #ffe3a3 62%);
+  padding:0 3px;
+  border-radius:6px;
+}
+.sub{ margin:0; color:var(--ink-soft); font-weight:700; font-size:clamp(14px,3.8vw,17px); }
+.divider{
+  height:10px; width:min(320px,72%);
+  margin:14px auto 20px;
+  background-image:radial-gradient(circle, #ffd6de 2.6px, rgba(255,214,222,0) 2.8px);
+  background-size:16px 10px;
+  background-repeat:repeat-x;
+}
+
+/* ---------- panel ---------- */
+.panel{
+  background:#fff;
+  border:3px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:0 6px 0 #f4f2fb;
+  padding:clamp(14px,4vw,22px);
+  max-width:560px;
+  margin:0 auto 16px;
+}
+.field{ margin-bottom:14px; }
+.flabel{
+  display:block; font-weight:900; font-size:clamp(14px,3.7vw,16px);
+  color:#3c5567; margin-bottom:7px; letter-spacing:.01em;
+}
+.inrow{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.inrow .to{ font-weight:800; color:var(--ink-soft); font-size:15px; }
+input[type="number"]{
+  width:100%;
+  max-width:150px;
+  flex:1 1 92px;
+  min-height:52px;
+  font:inherit;
+  font-size:20px;
+  font-weight:900;
+  color:var(--ink);
+  text-align:center;
+  padding:10px 12px;
+  border:3px solid #e6e3f5;
+  border-radius:16px;
+  background:#fbfaff;
+  -webkit-appearance:none;
+  appearance:none;
+}
+input[type="number"]:focus{ outline:none; border-color:var(--purple); background:#fff; box-shadow:0 0 0 4px rgba(139,124,246,.16); }
+#numGroups{ max-width:190px; }
+.stat{
+  font-size:clamp(13px,3.5vw,15px); font-weight:800; color:var(--ink-soft);
+  background:#f6f4ff; border-radius:14px; padding:9px 12px; margin:4px 0 14px;
+  text-align:center;
+}
+.stat .muted{ color:#b3bcc8; }
+
+/* ---------- buttons ---------- */
+.btn{
+  min-height:50px;
+  padding:12px 18px;
+  font:inherit; font-weight:900; font-size:16px;
+  color:#3b4f60;
+  background:#fff;
+  border:3px solid var(--line);
+  border-radius:16px;
+  box-shadow:0 4px 0 #f4f2fb;
+  cursor:pointer;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+.btn:active{ transform:translateY(2px); box-shadow:0 2px 0 #f4f2fb; }
+.btn.primary{
+  width:100%;
+  min-height:58px;
+  font-size:clamp(17px,4.6vw,20px);
+  color:#fff;
+  background:linear-gradient(135deg,#ff8fa3,#ffb27a);
+  border-color:#ff9fb0;
+  box-shadow:0 5px 0 #f2a2b2;
+}
+.btn.primary:active{ box-shadow:0 2px 0 #f2a2b2; }
+.btn:focus-visible{ outline:3px solid var(--teal); outline-offset:2px; }
+
+/* ---------- messages ---------- */
+.msg{ max-width:640px; margin:0 auto 16px; }
+.msg .box{
+  border-radius:16px; padding:12px 14px; font-weight:800;
+  font-size:clamp(14px,3.7vw,16px); text-align:center;
+}
+.msg .box.err{ background:#fff0f1; border:3px solid #ffd2d8; color:#c0394f; }
+.msg .box.warn{ background:#fff8e8; border:3px solid #ffe2ad; color:#a2701a; }
+.msg .box.ok{ background:#eefaf6; border:3px solid #cbeee6; color:#1e7c6d; }
+
+/* ---------- groups ---------- */
+#output{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(292px,1fr));
+  gap:clamp(12px,3vw,18px);
+  align-items:start;
+}
+.empty{
+  grid-column:1 / -1;
+  text-align:center; color:var(--ink-soft); font-weight:800;
+  background:#fff; border:3px dashed #e6e3f5; border-radius:var(--radius);
+  padding:26px 18px; margin:0;
+}
+.gcard{
+  background:#fff;
+  border:3px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:0 6px 0 #f4f2fb;
+  padding:clamp(12px,3.4vw,16px);
+  break-inside:avoid;
+  page-break-inside:avoid;
+}
+.ghead{ display:flex; align-items:center; gap:9px; margin-bottom:11px; flex-wrap:wrap; }
+.gname{
+  font-family:'Baloo 2','Nunito',sans-serif; font-weight:800;
+  font-size:clamp(19px,5.4vw,23px); letter-spacing:.01em;
+}
+.gcount{
+  margin-left:auto; font-size:12px; font-weight:900; letter-spacing:.06em;
+  text-transform:uppercase; color:#8b9dae; background:#f5f7fa;
+  border-radius:999px; padding:4px 10px; white-space:nowrap;
+}
+.gdot{ width:14px; height:14px; border-radius:50%; flex:0 0 14px; }
+.seats{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+.seat{
+  display:flex; align-items:center; gap:10px;
+  width:100%; min-height:60px;
+  padding:8px 10px;
+  font:inherit; color:inherit; text-align:left;
+  background:#fbfbfe;
+  border:3px solid #eae7f6;
+  border-radius:16px;
+  cursor:pointer;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+.seat:active{ transform:translateY(1px); }
+.seat:focus-visible{ outline:3px solid var(--teal); outline-offset:2px; }
+.letter{
+  flex:0 0 40px; width:40px; height:40px;
+  display:flex; align-items:center; justify-content:center;
+  border-radius:50%;
+  font-family:'Baloo 2','Nunito',sans-serif;
+  font-weight:800; font-size:21px; color:#fff;
+  background:var(--purple);
+  box-shadow:0 3px 0 rgba(0,0,0,.10);
+}
+.cand{ min-width:0; }
+.c-label{
+  display:block; font-size:10.5px; font-weight:900; letter-spacing:.1em;
+  text-transform:uppercase; color:#93a4b5; line-height:1.2;
+}
+.c-no{
+  display:block; font-size:clamp(23px,6.6vw,28px); font-weight:900;
+  line-height:1.12; color:#22374a; font-variant-numeric:tabular-nums;
+}
+.seat.sel{
+  background:#eafaf7;
+  border-color:var(--teal);
+  box-shadow:0 0 0 4px rgba(46,196,182,.22);
+  transform:translateY(-2px);
+}
+.seat.flash{ animation:pop .8s ease; }
+@keyframes pop{ 0%{ transform:scale(1); } 35%{ transform:scale(1.07); } 100%{ transform:scale(1); } }
+
+/* per-group pastel themes */
+.g0{ border-color:#ffd3dd; box-shadow:0 6px 0 #ffe9ee; }
+.g0 .gdot,.g0 .letter{ background:#ff7d90; }
+.g1{ border-color:#c6ece7; box-shadow:0 6px 0 #e2f7f4; }
+.g1 .gdot,.g1 .letter{ background:#2ec4b6; }
+.g2{ border-color:#d8d1ff; box-shadow:0 6px 0 #ebe8ff; }
+.g2 .gdot,.g2 .letter{ background:#8b7cf6; }
+.g3{ border-color:#ffe0ac; box-shadow:0 6px 0 #fff1d6; }
+.g3 .gdot,.g3 .letter{ background:#f2a63b; }
+.g4{ border-color:#cae3ff; box-shadow:0 6px 0 #e5f1ff; }
+.g4 .gdot,.g4 .letter{ background:#4aa3f0; }
+.g5{ border-color:#ffd4ee; box-shadow:0 6px 0 #ffe9f8; }
+.g5 .gdot,.g5 .letter{ background:#ec74c0; }
+
+/* ---------- actions ---------- */
+.actions{
+  display:flex; flex-wrap:wrap; gap:10px; justify-content:center;
+  margin:22px auto 10px; max-width:640px;
+}
+.actions .btn{ flex:1 1 160px; }
+.hint{
+  max-width:640px; margin:6px auto 0; text-align:center;
+  font-weight:800; font-size:clamp(13px,3.6vw,15px); color:#4d7f77;
+  background:#eefaf6; border:2px dashed #cbeee6; border-radius:14px; padding:9px 12px;
+}
+.foot{
+  max-width:640px; margin:16px auto 0; text-align:center;
+  font-size:clamp(12px,3.4vw,14px); color:#93a4b5; font-weight:700;
+}
+.copybox{ margin:12px auto 0; max-width:640px; }
+.copybox textarea{
+  width:100%; min-height:150px; font:inherit; font-size:15px;
+  padding:12px; border:3px solid var(--line); border-radius:16px; background:#fbfaff;
+}
+.copybox .tip{ text-align:center; font-weight:800; color:var(--ink-soft); font-size:14px; margin:6px 0 0; }
+
+.jserr{
+  display:none;
+  background:#fff0f1; border:3px solid #ffd2d8; color:#c0394f;
+  font-weight:800; border-radius:16px; padding:12px 14px;
+  margin:0 auto 16px; max-width:640px; font-size:15px;
+}
+
+/* ---------- small screens ---------- */
+@media (max-width:380px){
+  .seats{ grid-template-columns:1fr; }
+  .gcount{ display:none; }
+}
+
+/* ---------- print ---------- */
+@media print{
+  .no-print,.jserr,.hero-emoji,.hint{ display:none !important; }
+  body{ background:#fff; padding:0; color:#000; font-size:13px; }
+  h1{ font-size:20px; margin:0; }
+  .sub{ color:#333; }
+  .divider{ display:none; }
+  .hero{ text-align:left; margin:0 0 12px; }
+  #output{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .gcard{ box-shadow:none !important; border-width:2px !important; }
+  .seat{ background:#fff; border-width:2px; min-height:44px; }
+  .c-no{ font-size:19px; }
+  .letter{ width:32px; height:32px; flex-basis:32px; font-size:17px; }
+}
+</style>
+</head>
+<body>
+<div id="js-error" class="jserr"></div>
+<noscript>
+  <div class="jserr" style="display:block">This page needs JavaScript. 這個網頁需要開啟 JavaScript。</div>
+</noscript>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="hero-emoji" aria-hidden="true">&#127908;</div>
+    <h1>DSE Speaking Practice &middot; <span class="hl">隨機分組</span></h1>
+    <p class="sub">Paper 4 Group Discussion &mdash; Random Grouping</p>
+    <div class="divider" aria-hidden="true"></div>
+  </header>
+
+  <section class="panel no-print">
+    <div class="field">
+      <span class="flabel" id="lb-range">Class number 班號</span>
+      <div class="inrow">
+        <input id="fromNo" type="number" inputmode="numeric" min="1" max="99" step="1" value="1" aria-labelledby="lb-range" aria-label="Class number from">
+        <span class="to">to 至</span>
+        <input id="toNo" type="number" inputmode="numeric" min="1" max="99" step="1" value="15" aria-labelledby="lb-range" aria-label="Class number to">
+      </div>
+    </div>
+    <div class="field">
+      <span class="flabel" id="lb-groups">Number of groups 組數</span>
+      <input id="numGroups" type="number" inputmode="numeric" min="1" max="40" step="1" value="4" aria-labelledby="lb-groups" aria-label="Number of groups">
+    </div>
+    <div class="stat" id="stat">&mdash;</div>
+    <button id="btnGo" class="btn primary" type="button">&#127922; Shuffle 抽籤分組</button>
+  </section>
+
+  <div id="msg" class="msg" aria-live="polite"></div>
+
+  <section id="output" aria-live="polite"></section>
+
+  <div class="actions no-print" id="actions" style="display:none">
+    <button id="btnAgain" class="btn" type="button">&#128256; Shuffle again 重新分組</button>
+    <button id="btnCopy" class="btn" type="button">&#128203; Copy 複製名單</button>
+    <button id="btnPrint" class="btn" type="button">&#128424; Print 列印</button>
+  </div>
+
+  <p class="hint no-print" id="hint" style="display:none">Tap two candidates to swap them 點選兩位考生即可對調</p>
+  <p class="foot no-print">Each group holds up to 4 candidates, labelled A&ndash;D, like the real DSE Paper 4 group discussion.<br>每組最多 4 位考生，以 A&ndash;D 標示座位次序。</p>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  var LETTERS = ['A','B','C','D','E','F','G','H'];
+  var DEFAULT_HINT = 'Tap two candidates to swap them 點選兩位考生即可對調';
+  var state = { data: [], sel: null };
+
+  var grid = document.getElementById('output');
+
+  function $(id){ return document.getElementById(id); }
+  function addClass(el, c){
+    if(!el){ return; }
+    if((' ' + el.className + ' ').indexOf(' ' + c + ' ') === -1){
+      el.className = (el.className ? el.className + ' ' : '') + c;
+    }
+  }
+  function removeClass(el, c){
+    if(!el){ return; }
+    el.className = (' ' + el.className + ' ').replace(' ' + c + ' ', ' ').replace(/^\s+|\s+$/g, '');
+  }
+  function parseIntOrNaN(v){
+    var n = parseInt(v, 10);
+    return isNaN(n) ? NaN : n;
+  }
+
+  /* ---------- randomness (crypto when available) ---------- */
+  function rnd(n){
+    if(window.crypto && window.crypto.getRandomValues){
+      var buf = new Uint32Array(1);
+      var limit = Math.floor(4294967296 / n) * n;
+      var x = 0;
+      do { window.crypto.getRandomValues(buf); x = buf[0]; } while(x >= limit);
+      return x % n;
+    }
+    return Math.floor(Math.random() * n);
+  }
+  function shuffled(arr){
+    var a = arr.slice(0);
+    for(var i = a.length - 1; i > 0; i--){
+      var j = rnd(i + 1);
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  function distribute(nums, g){
+    var base = Math.floor(nums.length / g);
+    var rem = nums.length % g;
+    var out = [], k = 0;
+    for(var i = 0; i < g; i++){
+      var size = base + (i < rem ? 1 : 0);
+      out.push(nums.slice(k, k + size));
+      k += size;
+    }
+    return out;
+  }
+  function sizesText(){
+    var parts = [];
+    for(var i = 0; i < state.data.length; i++){ parts.push(state.data[i].length); }
+    return parts.join(' · ');
+  }
+
+  /* ---------- rendering ---------- */
+  function render(){
+    if(!state.data.length){
+      grid.innerHTML = '<p class="empty">No groups yet 還沒有分組<br>Press &#127922; Shuffle 抽籤分組 開始</p>';
+      return;
+    }
+    var html = '';
+    for(var g = 0; g < state.data.length; g++){
+      var mem = state.data[g];
+      html += '<div class="gcard g' + (g % 6) + '">';
+      html += '<div class="ghead"><span class="gdot" aria-hidden="true"></span>';
+      html += '<span class="gname">Group ' + (g + 1) + '</span>';
+      html += '<span class="gcount">' + mem.length + ' candidates</span></div>';
+      html += '<div class="seats">';
+      for(var i = 0; i < mem.length; i++){
+        html += '<button type="button" class="seat" data-seat="1" data-g="' + g + '" data-i="' + i + '"';
+        html += ' aria-label="Group ' + (g + 1) + ' Candidate ' + LETTERS[i] + ', class number ' + mem[i] + '">';
+        html += '<span class="letter" aria-hidden="true">' + LETTERS[i] + '</span>';
+        html += '<span class="cand"><span class="c-label">Candidate</span>';
+        html += '<span class="c-no">' + mem[i] + '</span></span>';
+        html += '</button>';
+      }
+      html += '</div></div>';
+    }
+    grid.innerHTML = html;
+  }
+
+  function showMsg(text, kind){
+    var box = $('msg');
+    if(!text){ box.innerHTML = ''; return; }
+    box.innerHTML = '<div class="box ' + kind + '">' + text + '</div>';
+  }
+  function setHint(text){
+    var h = $('hint');
+    h.innerHTML = text;
+    h.style.display = 'block';
+  }
+  function showActions(show){
+    $('actions').style.display = show ? 'flex' : 'none';
+  }
+
+  /* ---------- live stats ---------- */
+  function updateStat(){
+    var from = parseIntOrNaN($('fromNo').value);
+    var to = parseIntOrNaN($('toNo').value);
+    var g = parseIntOrNaN($('numGroups').value);
+    var el = $('stat');
+    if(isNaN(from) || isNaN(to) || isNaN(g) || from > to || g < 1){
+      el.innerHTML = '<span class="muted">&mdash;</span>';
+      return;
+    }
+    var n = to - from + 1;
+    if(g > n){
+      el.innerHTML = 'Too many groups 組數太多';
+      return;
+    }
+    var base = Math.floor(n / g), rem = n % g, parts = [];
+    for(var i = 0; i < g; i++){ parts.push(base + (i < rem ? 1 : 0)); }
+    el.innerHTML = n + ' students 位考生 &middot; ' + g + ' groups 組 &rarr; ' + parts.join(', ') + ' per group 每組';
+  }
+
+  /* ---------- generate ---------- */
+  function generate(){
+    var from = parseIntOrNaN($('fromNo').value);
+    var to = parseIntOrNaN($('toNo').value);
+    var g = parseIntOrNaN($('numGroups').value);
+
+    if(isNaN(from) || isNaN(to)){
+      showMsg('Please enter the class-number range, e.g. 1 to 15.<br>請輸入班號範圍，例如 1 至 15。', 'err');
+      return;
+    }
+    if(isNaN(g)){
+      showMsg('Please enter the number of groups.<br>請輸入組數。', 'err');
+      return;
+    }
+    if(from < 1 || to > 99 || from > to){
+      showMsg('Invalid class-number range 班號範圍不正確 (1&ndash;99，起點不可大於終點)。', 'err');
+      return;
+    }
+    if(g < 1 || g > 40){
+      showMsg('Number of groups must be 1&ndash;40 組數必須為 1&ndash;40。', 'err');
+      return;
+    }
+    var nums = [];
+    for(var i = from; i <= to; i++){ nums.push(i); }
+    if(g > nums.length){
+      showMsg('Number of groups (' + g + ') cannot be larger than the class size (' + nums.length + ').<br>組數不可多於考生人數 (' + nums.length + ')。', 'err');
+      return;
+    }
+
+    state.sel = null;
+    state.data = distribute(shuffled(nums), g);
+    render();
+    showActions(true);
+    setHint(DEFAULT_HINT);
+    updateStat();
+
+    var maxSize = Math.ceil(nums.length / g);
+    if(maxSize > 4){
+      showMsg('每組約 ' + maxSize + ' 人 &mdash; DSE 小組討論通常 3&ndash;4 人，可考慮分成 ' + Math.ceil(nums.length / 4) + ' 組。<br>About ' + maxSize + ' per group; DSE groups are usually 3&ndash;4, so ' + Math.ceil(nums.length / 4) + ' groups may fit better.', 'warn');
+    } else {
+      showMsg('Shuffled! ' + nums.length + ' 位考生分成 ' + g + ' 組（' + sizesText() + '）。<br>' + nums.length + ' candidates &rarr; ' + g + ' groups (' + sizesText() + ' per group).', 'ok');
+    }
+    save();
+  }
+
+  /* ---------- manual swap ---------- */
+  function findSeat(node){
+    var el = node;
+    while(el && el !== grid){
+      if(el.getAttribute && el.getAttribute('data-seat')){ return el; }
+      el = el.parentNode;
+    }
+    return null;
+  }
+  function flashSeat(seat){
+    var nodes = grid.getElementsByTagName('button');
+    for(var i = 0; i < nodes.length; i++){
+      var n = nodes[i];
+      if(n.getAttribute && n.getAttribute('data-seat') &&
+         parseInt(n.getAttribute('data-g'), 10) === seat.g &&
+         parseInt(n.getAttribute('data-i'), 10) === seat.i){
+        addClass(n, 'flash');
+        (function(node){
+          setTimeout(function(){ removeClass(node, 'flash'); }, 850);
+        })(n);
+      }
+    }
+  }
+  function onSeatClick(ev){
+    var e = ev || window.event;
+    var el = findSeat(e.target || e.srcElement);
+    if(!el){ return; }
+    var g = parseInt(el.getAttribute('data-g'), 10);
+    var i = parseInt(el.getAttribute('data-i'), 10);
+    if(!state.data[g] || !state.data[g].length){ return; }
+
+    if(state.sel === null){
+      state.sel = { g: g, i: i };
+      addClass(el, 'sel');
+      setHint('已選 Candidate ' + LETTERS[i] + '（' + state.data[g][i] + '）&mdash; 再點另一位考生即可對調<br>Selected &mdash; now tap the candidate you want to swap with');
+      return;
+    }
+    if(state.sel.g === g && state.sel.i === i){
+      state.sel = null;
+      removeClass(el, 'sel');
+      setHint(DEFAULT_HINT);
+      return;
+    }
+    var a = state.sel, b = { g: g, i: i };
+    var tmp = state.data[a.g][a.i];
+    state.data[a.g][a.i] = state.data[b.g][b.i];
+    state.data[b.g][b.i] = tmp;
+    state.sel = null;
+    render();
+    flashSeat(a);
+    flashSeat(b);
+    setHint('Swapped 已對調 &#9989; &mdash; ' + DEFAULT_HINT);
+  }
+
+  /* ---------- copy / print ---------- */
+  function buildText(){
+    var lines = ['DSE Speaking Practice — 分組名單 Random Grouping', ''];
+    for(var g = 0; g < state.data.length; g++){
+      var mem = state.data[g], parts = [];
+      for(var i = 0; i < mem.length; i++){ parts.push(LETTERS[i] + ': ' + mem[i]); }
+      lines.push('Group ' + (g + 1) + ' — ' + parts.join('   '));
+    }
+    lines.push('', 'A–D = seating order in the group 座位次序');
+    return lines.join('\n');
+  }
+  function showCopyBox(text){
+    var old = $('copybox');
+    if(old && old.parentNode){ old.parentNode.removeChild(old); }
+    var wrap = document.createElement('div');
+    wrap.id = 'copybox';
+    wrap.className = 'copybox no-print';
+    wrap.innerHTML = '<textarea readonly rows="8" aria-label="Grouping list"></textarea>' +
+                     '<p class="tip">長按文字全選複製 &middot; long-press the text to select and copy</p>';
+    $('actions').parentNode.insertBefore(wrap, $('actions'));
+    var ta = wrap.getElementsByTagName('textarea')[0];
+    ta.value = text;
+    try{ ta.focus(); ta.select(); }catch(e){}
+  }
+  function copyAll(){
+    if(!state.data.length){ return; }
+    var text = buildText();
+    var done = function(){ showMsg('已複製分組名單 Copied &#9989;', 'ok'); };
+    var fail = function(){ showCopyBox(text); };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      try{
+        navigator.clipboard.writeText(text).then(done, fail);
+        return;
+      }catch(e){ fail(); return; }
+    }
+    fail();
+  }
+
+  /* ---------- persistence ---------- */
+  function save(){
+    try{
+      localStorage.setItem('dse-speaking-grouping', JSON.stringify({
+        from: $('fromNo').value, to: $('toNo').value, groups: $('numGroups').value
+      }));
+    }catch(e){}
+  }
+  function load(){
+    try{
+      var raw = localStorage.getItem('dse-speaking-grouping');
+      if(!raw){ return; }
+      var s = JSON.parse(raw);
+      if(s.from){ $('fromNo').value = s.from; }
+      if(s.to){ $('toNo').value = s.to; }
+      if(s.groups){ $('numGroups').value = s.groups; }
+    }catch(e){}
+  }
+
+  /* ---------- wire up ---------- */
+  function on(id, evt, fn){
+    var el = $(id);
+    if(el && el.addEventListener){ el.addEventListener(evt, fn, false); }
+  }
+  function watch(id){
+    on(id, 'input', updateStat);
+    on(id, 'change', updateStat);
+  }
+
+  function init(){
+    load();
+    updateStat();
+    on('btnGo', 'click', generate);
+    on('btnAgain', 'click', generate);
+    on('btnCopy', 'click', copyAll);
+    on('btnPrint', 'click', function(){ window.print(); });
+    if(grid.addEventListener){ grid.addEventListener('click', onSeatClick, false); }
+    watch('fromNo'); watch('toNo'); watch('numGroups');
+    render();
+    window.__pageReady = true;
+  }
+
+  if(document.readyState === 'loading'){
+    if(document.addEventListener){ document.addEventListener('DOMContentLoaded', init, false); }
+    else { window.onload = init; }
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
