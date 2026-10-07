@@ -186,17 +186,21 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
    A B C D on one line (below that, full-width single column) */
 @media (min-width:1024px){
   #output{ grid-template-columns:repeat(2,minmax(0,1fr)); }
-  /* half-width cards: compact chips keep A B C D on one row */
-  .seat{ gap:4px; padding:6px 6px; min-height:48px; }
-  .letter{ flex:0 0 28px; width:28px; height:28px; font-size:16px; }
-  .c-label{ font-size:10.5px; }
-  .c-no{ font-size:17px; margin-left:.2em; }
+  /* iPad landscape and up: two group cards per row.
+     Four chips carrying the word "Candidate" need ~539px of card interior
+     (measured, two-digit numbers), but a half-width card at 1024-1359px has
+     only ~430-508px. So this tier shows the A-D badge plus the class number,
+     and the card header pill keeps the word ("4 CANDIDATES"). */
+  .seat{ gap:6px; padding:6px 10px; min-height:52px; }
+  .letter{ flex:0 0 30px; width:30px; height:30px; font-size:17px; }
+  .c-label{ display:none; }
+  .c-no{ font-size:22px; margin-left:0; }
 }
 @media (min-width:1360px){
-  /* wide cards: roomier chip again */
+  /* wide cards: the full "Candidate 12" chip fits on one row again */
   .seat{ gap:5px; padding:6px 8px; min-height:50px; }
   .letter{ flex:0 0 32px; width:32px; height:32px; font-size:17px; }
-  .c-label{ font-size:11.5px; }
+  .c-label{ display:inline; font-size:11.5px; }
   .c-no{ font-size:18px; margin-left:.25em; }
 }
 .empty{
