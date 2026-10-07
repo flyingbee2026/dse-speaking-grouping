@@ -510,7 +510,7 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
     }
     var base = Math.floor(n / g), rem = n % g, parts = [];
     for(var i = 0; i < g; i++){ parts.push(base + (i < rem ? 1 : 0)); }
-    el.innerHTML = n + ' students &middot; ' + g + ' groups<br>' +
+    el.innerHTML = n + ' candidates &middot; ' + g + ' groups<br>' +
                    '<span class="gsizes">Group sizes: ' + parts.join(' &middot; ') + '</span>';
   }
 
