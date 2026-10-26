@@ -377,6 +377,10 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
       <span class="flabel" id="lb-groups">Number of groups</span>
       <input id="numGroups" type="number" inputmode="numeric" min="1" max="40" step="1" value="4" aria-labelledby="lb-groups" aria-label="Number of groups">
     </div>
+    <div class="field">
+      <span class="flabel" id="lb-absent">Number of absentees</span>
+      <input id="absentNo" type="number" inputmode="numeric" min="0" max="99" step="1" value="0" aria-labelledby="lb-absent" aria-label="Number of absentees">
+    </div>
     <div class="stat" id="stat">&mdash;</div>
     <button id="btnGo" class="btn primary" type="button">&#127922; Shuffle</button>
   </section>
@@ -401,7 +405,7 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
 
   var LETTERS = ['A','B','C','D','E','F','G','H'];
   var DEFAULT_HINT = 'Tap two candidates to swap them';
-  var state = { data: [], sel: null };
+  var state = { data: [], sel: null, absent: [] };
 
   var grid = document.getElementById('output');
 
@@ -498,20 +502,24 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
     var from = parseIntOrNaN($('fromNo').value);
     var to = parseIntOrNaN($('toNo').value);
     var g = parseIntOrNaN($('numGroups').value);
+    var absent = parseIntOrNaN($('absentNo').value) || 0;
     var el = $('stat');
     if(isNaN(from) || isNaN(to) || isNaN(g) || from > to || g < 1){
       el.innerHTML = '<span class="muted">&mdash;</span>';
       return;
     }
     var n = to - from + 1;
-    if(g > n){
+    if(g > n - absent){
       el.innerHTML = 'Too many groups';
       return;
     }
-    var base = Math.floor(n / g), rem = n % g, parts = [];
+    var active = n - absent;
+    var base = Math.floor(active / g), rem = active % g, parts = [];
     for(var i = 0; i < g; i++){ parts.push(base + (i < rem ? 1 : 0)); }
-    el.innerHTML = n + ' candidates &middot; ' + g + ' groups<br>' +
-                   '<span class="gsizes">Group sizes: ' + parts.join(' &middot; ') + '</span>';
+    var html = n + ' candidates &middot; ' + g + ' groups';
+    if(absent > 0){ html += ' &middot; ' + active + ' active <span class="muted">(' + absent + ' absent)</span>'; }
+    html += '<br><span class="gsizes">Group sizes: ' + parts.join(' &middot; ') + '</span>';
+    el.innerHTML = html;
   }
 
   /* ---------- generate ---------- */
@@ -519,6 +527,7 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
     var from = parseIntOrNaN($('fromNo').value);
     var to = parseIntOrNaN($('toNo').value);
     var g = parseIntOrNaN($('numGroups').value);
+    var absent = parseIntOrNaN($('absentNo').value) || 0;
 
     if(isNaN(from) || isNaN(to)){
       showMsg('Please enter the class-number range, e.g. 1 to 15.', 'err');
@@ -536,25 +545,42 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
       showMsg('Number of groups must be 1&ndash;40.', 'err');
       return;
     }
+    if(absent < 0 || absent > 99){
+      showMsg('Number of absentees must be 0&ndash;99.', 'err');
+      return;
+    }
     var nums = [];
     for(var i = from; i <= to; i++){ nums.push(i); }
-    if(g > nums.length){
-      showMsg('Number of groups (' + g + ') cannot be larger than the class size (' + nums.length + ').', 'err');
+    if(absent > nums.length){
+      showMsg('Absentees (' + absent + ') cannot be more than class size (' + nums.length + ').', 'err');
+      return;
+    }
+    if(g > nums.length - absent){
+      showMsg('Number of groups (' + g + ') cannot be larger than active candidates (' + (nums.length - absent) + ').', 'err');
       return;
     }
 
+    var shuf = shuffled(nums);
+    var absentees = shuf.slice(0, absent);
+    var active = shuf.slice(absent);
+
     state.sel = null;
-    state.data = distribute(shuffled(nums), g);
+    state.absent = absentees;
+    state.data = distribute(active, g);
     render();
     showActions(true);
     setHint(DEFAULT_HINT);
     updateStat();
 
-    var maxSize = Math.ceil(nums.length / g);
+    var maxSize = Math.ceil(active.length / g);
+    var msg = '&#9989; Groups ready &middot; ' + g + ' groups &middot; ' + active.length + ' candidates';
+    if(absentees.length){
+      msg += ' &middot; absent: ' + absentees.join(', ');
+    }
     if(maxSize > 4){
-      showMsg('About ' + maxSize + ' per group &mdash; DSE groups are usually 3&ndash;4 candidates, so ' + Math.ceil(nums.length / 4) + ' groups may fit better.', 'warn');
+      showMsg('About ' + maxSize + ' per group &mdash; DSE groups are usually 3&ndash;4 candidates, so ' + Math.ceil(active.length / 4) + ' groups may fit better.', 'warn');
     } else {
-      showMsg('&#9989; Groups ready &middot; ' + g + ' groups &middot; ' + nums.length + ' candidates', 'ok');
+      showMsg(msg, 'ok');
     }
     save();
   }
@@ -621,6 +647,9 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
       for(var i = 0; i < mem.length; i++){ parts.push(LETTERS[i] + ': ' + mem[i]); }
       lines.push('Group ' + (g + 1) + ' — ' + parts.join('   '));
     }
+    if(state.absent && state.absent.length){
+      lines.push('', 'Absent: ' + state.absent.join(', '));
+    }
     lines.push('', 'A–D = seating order in the group');
     return lines.join('\n');
   }
@@ -655,7 +684,7 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
   function save(){
     try{
       localStorage.setItem('dse-speaking-grouping', JSON.stringify({
-        from: $('fromNo').value, to: $('toNo').value, groups: $('numGroups').value
+        from: $('fromNo').value, to: $('toNo').value, groups: $('numGroups').value, absent: $('absentNo').value
       }));
     }catch(e){}
   }
@@ -667,6 +696,7 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
       if(s.from){ $('fromNo').value = s.from; }
       if(s.to){ $('toNo').value = s.to; }
       if(s.groups){ $('numGroups').value = s.groups; }
+      if(s.absent !== undefined){ $('absentNo').value = s.absent; }
     }catch(e){}
   }
 
@@ -688,7 +718,7 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
     on('btnCopy', 'click', copyAll);
     on('btnPrint', 'click', function(){ window.print(); });
     if(grid.addEventListener){ grid.addEventListener('click', onSeatClick, false); }
-    watch('fromNo'); watch('toNo'); watch('numGroups');
+    watch('fromNo'); watch('toNo'); watch('numGroups'); watch('absentNo');
     render();
     window.__pageReady = true;
   }
