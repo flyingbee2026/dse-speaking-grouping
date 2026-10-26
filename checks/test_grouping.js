@@ -81,12 +81,13 @@ function readGroups(){
   }));
 }
 function seatEl(g, i){ return doc.querySelector('.seat[data-g="' + g + '"][data-i="' + i + '"]'); }
-function setInputs(from, to, g, absent){
+function setInputs(from, to, g, absent, filter){
   doc.getElementById('fromNo').value = String(from);
   doc.getElementById('toNo').value = String(to);
   doc.getElementById('numGroups').value = String(g);
   doc.getElementById('absentNo').value = String(absent || '');
-  ['fromNo','toNo','numGroups','absentNo'].forEach(id => doc.getElementById(id).dispatchEvent(new win.Event('input', { bubbles: true })));
+  if(filter){ doc.getElementById('numFilter').value = filter; }
+  ['fromNo','toNo','numGroups','absentNo','numFilter'].forEach(id => doc.getElementById(id).dispatchEvent(new win.Event('input', { bubbles: true })));
 }
 function msgText(){ return (doc.getElementById('msg').textContent || '').replace(/\s+/g, ' ').trim(); }
 function msgClass(){ const b = doc.querySelector('#msg .box'); return b ? b.className : ''; }
@@ -265,6 +266,7 @@ function sizes(){ return readGroups().map(c => c.seats.length); }
     const s = JSON.parse(raw);
     assert.strictEqual(s.from, '1'); assert.strictEqual(s.to, '22'); assert.strictEqual(s.groups, '6');
     assert.ok(s.absent !== undefined, 'absent field must be saved');
+    assert.ok(s.filter !== undefined, 'filter field must be saved');
   });
 
   await acheck('T20 reload restores saved settings', async () => {
@@ -279,6 +281,7 @@ function sizes(){ return readGroups().map(c => c.seats.length); }
     assert.strictEqual(d.getElementById('toNo').value, '22', 'saved range end not restored');
     assert.strictEqual(d.getElementById('numGroups').value, '6', 'saved group count not restored');
     assert.strictEqual(d.getElementById('absentNo').value, '', 'saved absent input not restored');
+    assert.ok(d.getElementById('numFilter').value, 'filter value should be restored');
     assert.ok(/22 candidates/.test(d.getElementById('stat').textContent), 'stat must use the restored values');
   });
 
@@ -372,6 +375,41 @@ function sizes(){ return readGroups().map(c => c.seats.length); }
     click(doc.getElementById('btnGo'));
     assert.ok(/err/.test(msgClass()), 'expected error for out-of-range absentee');
     assert.ok(/out of range/.test(msgText()), 'message: ' + msgText());
+  });
+
+  check('T32 even filter: 1-10 even only -> 5 candidates in 2 groups', () => {
+    setInputs(1, 10, 2, '', 'even');
+    click(doc.getElementById('btnGo'));
+    const active = flatNums();
+    assert.strictEqual(active.length, 5, 'should have 5 even numbers');
+    assert.ok(active.every(n => n % 2 === 0), 'all numbers must be even: ' + active.join(','));
+    assert.ok(/even only/.test(msgText()) || /even/.test(statText()), 'should mention even filter');
+  });
+
+  check('T33 odd filter: 1-10 odd only -> 5 candidates in 2 groups', () => {
+    setInputs(1, 10, 2, '', 'odd');
+    click(doc.getElementById('btnGo'));
+    const active = flatNums();
+    assert.strictEqual(active.length, 5, 'should have 5 odd numbers');
+    assert.ok(active.every(n => n % 2 !== 0), 'all numbers must be odd: ' + active.join(','));
+    assert.ok(/odd only/.test(msgText()) || /odd/.test(statText()), 'should mention odd filter');
+  });
+
+  check('T34 even filter with absentees combo', () => {
+    setInputs(1, 10, 2, '2, 4', 'even');
+    click(doc.getElementById('btnGo'));
+    const active = flatNums();
+    assert.strictEqual(active.length, 3, '10 has 5 even, minus 2 absent = 3');
+    assert.ok(active.indexOf(2) === -1, '2 should be absent');
+    assert.ok(active.indexOf(4) === -1, '4 should be absent');
+    assert.ok(active.every(n => n % 2 === 0), 'remaining must still be even');
+  });
+
+  check('T35 stat shows even-only breakdown', () => {
+    setInputs(1, 10, 3, '', 'even');
+    const s = statText();
+    assert.ok(/even only/.test(s), 'stat must show even only: ' + s);
+    assert.ok(/Group sizes:/.test(s), 'stat must still show group sizes: ' + s);
   });
 
   console.log('\n--- ' + pass + ' checks passed, ' + fails.length + ' failed ---');

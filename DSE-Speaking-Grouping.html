@@ -112,9 +112,10 @@ h1 .hl{
 .inrow{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 .inrow .to{ font-weight:800; color:#55697b; font-size:16px; padding:0 2px; }
 input[type="number"],
-input[type="text"]{
+input[type="text"],
+select{
   width:100%;
-  max-width:150px;
+  max-width:260px;
   flex:1 1 92px;
   min-height:52px;
   font:inherit;
@@ -130,7 +131,8 @@ input[type="text"]{
   appearance:none;
 }
 input[type="number"]:focus,
-input[type="text"]:focus{ outline:none; border-color:var(--purple); background:#fff; box-shadow:0 0 0 4px rgba(139,124,246,.16); }
+input[type="text"]:focus,
+select:focus{ outline:none; border-color:var(--purple); background:#fff; box-shadow:0 0 0 4px rgba(139,124,246,.16); }
 #numGroups{ max-width:190px; }
 #absentNo{ max-width:260px; text-align:left; font-size:18px; font-weight:700; }
 .stat{
@@ -377,6 +379,14 @@ input[type="text"]:focus{ outline:none; border-color:var(--purple); background:#
       </div>
     </div>
     <div class="field">
+      <span class="flabel" id="lb-filter">Include</span>
+      <select id="numFilter" aria-labelledby="lb-filter" aria-label="Number filter">
+        <option value="all">All numbers</option>
+        <option value="even">Even numbers only</option>
+        <option value="odd">Odd numbers only</option>
+      </select>
+    </div>
+    <div class="field">
       <span class="flabel" id="lb-groups">Number of groups</span>
       <input id="numGroups" type="number" inputmode="numeric" min="1" max="40" step="1" value="4" aria-labelledby="lb-groups" aria-label="Number of groups">
     </div>
@@ -516,6 +526,7 @@ input[type="text"]:focus{ outline:none; border-color:var(--purple); background:#
     var to = parseIntOrNaN($('toNo').value);
     var g = parseIntOrNaN($('numGroups').value);
     var absentees = parseAbsentees($('absentNo').value);
+    var filter = $('numFilter').value;
     var el = $('stat');
     if(isNaN(from) || isNaN(to) || isNaN(g) || from > to || g < 1){
       el.innerHTML = '<span class="muted">&mdash;</span>';
@@ -524,6 +535,18 @@ input[type="text"]:focus{ outline:none; border-color:var(--purple); background:#
     var n = to - from + 1;
     var absentCount = absentees.length;
     var active = n - absentCount;
+    if(filter === 'even' || filter === 'odd'){
+      var filtered = 0;
+      for(var i = from; i <= to; i++){
+        var isAbsent = false;
+        for(var j = 0; j < absentees.length; j++){ if(i === absentees[j]){ isAbsent = true; break; } }
+        if(!isAbsent){
+          if(filter === 'even' && i % 2 === 0){ filtered++; }
+          else if(filter === 'odd' && i % 2 !== 0){ filtered++; }
+        }
+      }
+      active = filtered;
+    }
     if(g > active){
       el.innerHTML = 'Too many groups';
       return;
@@ -531,7 +554,8 @@ input[type="text"]:focus{ outline:none; border-color:var(--purple); background:#
     var base = Math.floor(active / g), rem = active % g, parts = [];
     for(var i = 0; i < g; i++){ parts.push(base + (i < rem ? 1 : 0)); }
     var html = n + ' candidates &middot; ' + g + ' groups';
-    if(absentCount > 0){ html += ' &middot; ' + active + ' active <span class="muted">(' + absentCount + ' absent)</span>'; }
+    if(absentCount > 0){ html += ' &middot; ' + (filter === 'all' ? active : active) + ' active <span class="muted">(' + absentCount + ' absent)</span>'; }
+    if(filter !== 'all'){ html += ' &middot; ' + filter + ' only'; }
     html += '<br><span class="gsizes">Group sizes: ' + parts.join(' &middot; ') + '</span>';
     el.innerHTML = html;
   }
@@ -587,6 +611,17 @@ input[type="text"]:focus{ outline:none; border-color:var(--purple); background:#
       if(!found){ active.push(nums[i]); }
     }
 
+    /* apply even/odd filter */
+    var filter = $('numFilter').value;
+    if(filter === 'even' || filter === 'odd'){
+      var filtered = [];
+      for(var i = 0; i < active.length; i++){
+        if(filter === 'even' && active[i] % 2 === 0){ filtered.push(active[i]); }
+        else if(filter === 'odd' && active[i] % 2 !== 0){ filtered.push(active[i]); }
+      }
+      active = filtered;
+    }
+
     if(g > active.length){
       showMsg('Number of groups (' + g + ') cannot be larger than active candidates (' + active.length + ').', 'err');
       return;
@@ -604,6 +639,9 @@ input[type="text"]:focus{ outline:none; border-color:var(--purple); background:#
     var msg = '&#9989; Groups ready &middot; ' + g + ' groups &middot; ' + active.length + ' candidates';
     if(absentees.length){
       msg += ' &middot; absent: ' + absentees.join(', ');
+    }
+    if(filter !== 'all'){
+      msg += ' &middot; ' + filter + ' only';
     }
     if(maxSize > 4){
       showMsg('About ' + maxSize + ' per group &mdash; DSE groups are usually 3&ndash;4 candidates, so ' + Math.ceil(active.length / 4) + ' groups may fit better.', 'warn');
@@ -712,7 +750,7 @@ input[type="text"]:focus{ outline:none; border-color:var(--purple); background:#
   function save(){
     try{
       localStorage.setItem('dse-speaking-grouping', JSON.stringify({
-        from: $('fromNo').value, to: $('toNo').value, groups: $('numGroups').value, absent: $('absentNo').value
+        from: $('fromNo').value, to: $('toNo').value, groups: $('numGroups').value, absent: $('absentNo').value, filter: $('numFilter').value
       }));
     }catch(e){}
   }
@@ -725,6 +763,7 @@ input[type="text"]:focus{ outline:none; border-color:var(--purple); background:#
       if(s.to){ $('toNo').value = s.to; }
       if(s.groups){ $('numGroups').value = s.groups; }
       if(s.absent !== undefined){ $('absentNo').value = s.absent; }
+      if(s.filter){ $('numFilter').value = s.filter; }
     }catch(e){}
   }
 
@@ -746,7 +785,7 @@ input[type="text"]:focus{ outline:none; border-color:var(--purple); background:#
     on('btnCopy', 'click', copyAll);
     on('btnPrint', 'click', function(){ window.print(); });
     if(grid.addEventListener){ grid.addEventListener('click', onSeatClick, false); }
-    watch('fromNo'); watch('toNo'); watch('numGroups'); watch('absentNo');
+    watch('fromNo'); watch('toNo'); watch('numGroups'); watch('absentNo'); watch('numFilter');
     render();
     window.__pageReady = true;
   }
