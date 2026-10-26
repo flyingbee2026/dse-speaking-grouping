@@ -111,7 +111,8 @@ h1 .hl{
 }
 .inrow{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 .inrow .to{ font-weight:800; color:#55697b; font-size:16px; padding:0 2px; }
-input[type="number"]{
+input[type="number"],
+input[type="text"]{
   width:100%;
   max-width:150px;
   flex:1 1 92px;
@@ -128,8 +129,10 @@ input[type="number"]{
   -webkit-appearance:none;
   appearance:none;
 }
-input[type="number"]:focus{ outline:none; border-color:var(--purple); background:#fff; box-shadow:0 0 0 4px rgba(139,124,246,.16); }
+input[type="number"]:focus,
+input[type="text"]:focus{ outline:none; border-color:var(--purple); background:#fff; box-shadow:0 0 0 4px rgba(139,124,246,.16); }
 #numGroups{ max-width:190px; }
+#absentNo{ max-width:260px; text-align:left; font-size:18px; font-weight:700; }
 .stat{
   font-size:clamp(14px,3.9vw,16px); font-weight:800; color:#4e6474;
   background:#f2f0fd; border-radius:14px; padding:11px 13px; margin:6px 0 16px;
@@ -378,8 +381,8 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
       <input id="numGroups" type="number" inputmode="numeric" min="1" max="40" step="1" value="4" aria-labelledby="lb-groups" aria-label="Number of groups">
     </div>
     <div class="field">
-      <span class="flabel" id="lb-absent">Number of absentees</span>
-      <input id="absentNo" type="number" inputmode="numeric" min="0" max="99" step="1" value="0" aria-labelledby="lb-absent" aria-label="Number of absentees">
+      <span class="flabel" id="lb-absent">Absentees <span style="font-weight:400;color:#8899aa;font-size:13px">(class numbers)</span></span>
+      <input id="absentNo" type="text" inputmode="numeric" placeholder="e.g. 5, 7, 12" aria-labelledby="lb-absent" aria-label="Absent class numbers">
     </div>
     <div class="stat" id="stat">&mdash;</div>
     <button id="btnGo" class="btn primary" type="button">&#127922; Shuffle</button>
@@ -419,6 +422,16 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
   function removeClass(el, c){
     if(!el){ return; }
     el.className = (' ' + el.className + ' ').replace(' ' + c + ' ', ' ').replace(/^\s+|\s+$/g, '');
+  }
+  function parseAbsentees(str){
+    if(!str || !str.trim()){ return []; }
+    var parts = str.split(/[\s,]+/);
+    var out = [];
+    for(var i = 0; i < parts.length; i++){
+      var n = parseInt(parts[i], 10);
+      if(!isNaN(n)){ out.push(n); }
+    }
+    return out;
   }
   function parseIntOrNaN(v){
     var n = parseInt(v, 10);
@@ -502,22 +515,23 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
     var from = parseIntOrNaN($('fromNo').value);
     var to = parseIntOrNaN($('toNo').value);
     var g = parseIntOrNaN($('numGroups').value);
-    var absent = parseIntOrNaN($('absentNo').value) || 0;
+    var absentees = parseAbsentees($('absentNo').value);
     var el = $('stat');
     if(isNaN(from) || isNaN(to) || isNaN(g) || from > to || g < 1){
       el.innerHTML = '<span class="muted">&mdash;</span>';
       return;
     }
     var n = to - from + 1;
-    if(g > n - absent){
+    var absentCount = absentees.length;
+    var active = n - absentCount;
+    if(g > active){
       el.innerHTML = 'Too many groups';
       return;
     }
-    var active = n - absent;
     var base = Math.floor(active / g), rem = active % g, parts = [];
     for(var i = 0; i < g; i++){ parts.push(base + (i < rem ? 1 : 0)); }
     var html = n + ' candidates &middot; ' + g + ' groups';
-    if(absent > 0){ html += ' &middot; ' + active + ' active <span class="muted">(' + absent + ' absent)</span>'; }
+    if(absentCount > 0){ html += ' &middot; ' + active + ' active <span class="muted">(' + absentCount + ' absent)</span>'; }
     html += '<br><span class="gsizes">Group sizes: ' + parts.join(' &middot; ') + '</span>';
     el.innerHTML = html;
   }
@@ -527,7 +541,7 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
     var from = parseIntOrNaN($('fromNo').value);
     var to = parseIntOrNaN($('toNo').value);
     var g = parseIntOrNaN($('numGroups').value);
-    var absent = parseIntOrNaN($('absentNo').value) || 0;
+    var absentees = parseAbsentees($('absentNo').value);
 
     if(isNaN(from) || isNaN(to)){
       showMsg('Please enter the class-number range, e.g. 1 to 15.', 'err');
@@ -545,28 +559,42 @@ input[type="number"]:focus{ outline:none; border-color:var(--purple); background
       showMsg('Number of groups must be 1&ndash;40.', 'err');
       return;
     }
-    if(absent < 0 || absent > 99){
-      showMsg('Number of absentees must be 0&ndash;99.', 'err');
-      return;
-    }
     var nums = [];
     for(var i = from; i <= to; i++){ nums.push(i); }
-    if(absent > nums.length){
-      showMsg('Absentees (' + absent + ') cannot be more than class size (' + nums.length + ').', 'err');
+
+    /* validate absentees */
+    var invalidAbsent = [];
+    for(var i = 0; i < absentees.length; i++){
+      if(absentees[i] < from || absentees[i] > to){
+        invalidAbsent.push(absentees[i]);
+      }
+    }
+    if(invalidAbsent.length){
+      showMsg('Absent class number(s) out of range: ' + invalidAbsent.join(', ') + ' (range is ' + from + '&ndash;' + to + ').', 'err');
       return;
     }
-    if(g > nums.length - absent){
-      showMsg('Number of groups (' + g + ') cannot be larger than active candidates (' + (nums.length - absent) + ').', 'err');
+    if(absentees.length > nums.length){
+      showMsg('Too many absentees (' + absentees.length + '). Class size is only ' + nums.length + '.', 'err');
       return;
     }
 
-    var shuf = shuffled(nums);
-    var absentees = shuf.slice(0, absent);
-    var active = shuf.slice(absent);
+    var active = [];
+    for(var i = 0; i < nums.length; i++){
+      var found = false;
+      for(var j = 0; j < absentees.length; j++){
+        if(nums[i] === absentees[j]){ found = true; break; }
+      }
+      if(!found){ active.push(nums[i]); }
+    }
+
+    if(g > active.length){
+      showMsg('Number of groups (' + g + ') cannot be larger than active candidates (' + active.length + ').', 'err');
+      return;
+    }
 
     state.sel = null;
     state.absent = absentees;
-    state.data = distribute(active, g);
+    state.data = distribute(shuffled(active), g);
     render();
     showActions(true);
     setHint(DEFAULT_HINT);

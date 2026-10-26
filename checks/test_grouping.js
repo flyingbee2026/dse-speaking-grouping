@@ -85,7 +85,7 @@ function setInputs(from, to, g, absent){
   doc.getElementById('fromNo').value = String(from);
   doc.getElementById('toNo').value = String(to);
   doc.getElementById('numGroups').value = String(g);
-  doc.getElementById('absentNo').value = String(absent || 0);
+  doc.getElementById('absentNo').value = String(absent || '');
   ['fromNo','toNo','numGroups','absentNo'].forEach(id => doc.getElementById(id).dispatchEvent(new win.Event('input', { bubbles: true })));
 }
 function msgText(){ return (doc.getElementById('msg').textContent || '').replace(/\s+/g, ' ').trim(); }
@@ -278,7 +278,7 @@ function sizes(){ return readGroups().map(c => c.seats.length); }
     assert.strictEqual(d.getElementById('fromNo').value, '1', 'saved range start not restored');
     assert.strictEqual(d.getElementById('toNo').value, '22', 'saved range end not restored');
     assert.strictEqual(d.getElementById('numGroups').value, '6', 'saved group count not restored');
-    assert.strictEqual(d.getElementById('absentNo').value, '0', 'saved absent count not restored');
+    assert.strictEqual(d.getElementById('absentNo').value, '', 'saved absent input not restored');
     assert.ok(/22 candidates/.test(d.getElementById('stat').textContent), 'stat must use the restored values');
   });
 
@@ -326,42 +326,52 @@ function sizes(){ return readGroups().map(c => c.seats.length); }
       'a media query adds no specificity - the tier must be declared after the base .c-no rule');
   });
 
-  check('T27 generate with 3 absentees out of 15', () => {
-    setInputs(1, 15, 4, 3);
+  check('T27 generate with specific absentees (5, 7, 12 out of 15)', () => {
+    setInputs(1, 15, 4, '5, 7, 12');
     click(doc.getElementById('btnGo'));
     const g = readGroups();
     assert.strictEqual(g.length, 4, 'group count');
     assert.deepStrictEqual(sizes(), [3, 3, 3, 3], 'sizes: ' + sizes().join(','));
     const active = flatNums();
     assert.strictEqual(active.length, 12, 'active candidates');
-    assert.deepStrictEqual(active.slice().sort((a, b) => a - b), active.slice().sort((a, b) => a - b), 'sorted check');
+    assert.ok(active.indexOf(5) === -1, '5 should be absent');
+    assert.ok(active.indexOf(7) === -1, '7 should be absent');
+    assert.ok(active.indexOf(12) === -1, '12 should be absent');
     assert.ok(/absent:/.test(msgText()), 'message must list absentees: ' + msgText());
-    assert.ok(/3 absentees?|absent: \d/.test(msgText()) || /3 candidates/.test(msgText()), 'message must mention 3 absent: ' + msgText());
+    assert.ok(/absent: 5.*7.*12/.test(msgText()) || /absent:.*12/.test(msgText()), 'message must mention absent numbers: ' + msgText());
   });
 
   check('T28 all absentees = no groups possible', () => {
-    setInputs(1, 5, 2, 5);
+    setInputs(1, 5, 2, '1, 2, 3, 4, 5');
     click(doc.getElementById('btnGo'));
     assert.ok(/err/.test(msgClass()), 'expected error when all absent');
     assert.ok(/cannot be larger than active candidates \(0\)/.test(msgText()), 'message: ' + msgText());
   });
 
   check('T29 copy text includes absent list when absentees > 0', () => {
-    setInputs(1, 10, 3, 2);
+    setInputs(1, 10, 3, '2, 9');
     click(doc.getElementById('btnGo'));
     click(doc.getElementById('btnCopy'));
     const box = doc.getElementById('copybox');
     if (box) {
       const txt = box.getElementsByTagName('textarea')[0].value;
       assert.ok(/Absent:/.test(txt), 'copy text must list absentees: ' + txt);
+      assert.ok(/2.*9/.test(txt) || /9.*2/.test(txt), 'copy text must include the absent numbers: ' + txt);
     }
   });
 
   check('T30 stat reflects absentees live', () => {
-    setInputs(1, 20, 5, 4);
+    setInputs(1, 20, 5, '3, 8, 15, 18');
     const s = statText();
     assert.ok(/16 active/.test(s) && /4 absent/.test(s), 'stat must show active+absent breakdown: ' + s);
     assert.ok(/Group sizes:/.test(s), 'stat must still show group sizes: ' + s);
+  });
+
+  check('T31 invalid absentee number shows error', () => {
+    setInputs(1, 10, 3, '99');
+    click(doc.getElementById('btnGo'));
+    assert.ok(/err/.test(msgClass()), 'expected error for out-of-range absentee');
+    assert.ok(/out of range/.test(msgText()), 'message: ' + msgText());
   });
 
   console.log('\n--- ' + pass + ' checks passed, ' + fails.length + ' failed ---');
